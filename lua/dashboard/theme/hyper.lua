@@ -82,7 +82,7 @@ local function load_packages(config)
   if package_manager_stats.name == 'lazy' then
     lines = {
       '',
-      'Startuptime: ' .. package_manager_stats.time .. ' ms',
+      'Startuptime: ' .. math.floor(package_manager_stats.time) .. ' ms',
       'Plugins: '
         .. package_manager_stats.loaded
         .. ' loaded / '
@@ -164,7 +164,12 @@ local function mru_list(config)
     icon_hl = 'DashboardMruIcon',
     label = ' Most Recent Files:',
     cwd_only = false,
+    enable = true,
   }, config.mru or {})
+
+  if config.mru.enable == false then
+    return {}, {}
+  end
 
   local list = {
     config.mru.icon .. config.mru.label,
@@ -341,8 +346,13 @@ local function gen_center(plist, config)
   local first_line = api.nvim_buf_line_count(config.bufnr)
   api.nvim_buf_set_lines(config.bufnr, first_line, -1, false, plist)
 
-  local start_col = plist[plist_len + 2]:find('[^%s]') - 1
-  local _, scol = plist[2]:find('%S')
+  local start_col = 0
+  local scol = 0
+
+  if config.mru.enable then
+    start_col = plist[plist_len + 2]:find('[^%s]') - 1
+    _, scol = plist[2]:find('%S')
+  end
 
   local hotkey = gen_hotkey(config)
 
@@ -385,7 +395,12 @@ local function gen_center(plist, config)
   end
 
   -- initialize the cursor pos
-  api.nvim_win_set_cursor(config.winid, { first_line + 3, start_col + 4 })
+  if config.mru.enable then
+    api.nvim_win_set_cursor(config.winid, { first_line + 3, start_col + 4 })
+  else
+    local center_col = math.floor(vim.o.columns / 2)
+    api.nvim_win_set_cursor(config.winid, { 13, center_col })
+  end
 
   api.nvim_buf_add_highlight(config.bufnr, 0, 'DashboardMruTitle', first_line + plist_len, 0, -1)
   api.nvim_buf_add_highlight(
