@@ -475,6 +475,8 @@ local function gen_footer(config)
   for i, _ in pairs(footer) do
     api.nvim_buf_add_highlight(config.bufnr, 0, 'DashboardFooter', first_line + i - 1, 0, -1)
   end
+
+  utils.add_update_footer_command(config.bufnr, footer)
 end
 
 local function project_delete()
@@ -513,7 +515,9 @@ local function theme_instance(config)
       utils.disable_move_key(config.bufnr)
     end
     require('dashboard.theme.header').generate_header(config)
-    gen_shortcut(config)
+    if not config.shortcut or not vim.tbl_isempty(config.shortcut) then
+      gen_shortcut(config)
+    end
     load_packages(config)
     gen_center(plist, config)
     gen_footer(config)
